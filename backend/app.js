@@ -5,12 +5,13 @@ const path = require('path');
 require("dotenv").config();
 
 const userRoutes = require('./routes/user');
-const sauceRoutes = require('./routes/sauce');
+const postsRoute = require("./routes/posts");
 
 const app = express();
 
 // Connexion au cluster mongoDB
-mongoose.connect(process.env.MONGODB_URL,
+// mongoose.connect(process.env.MONGODB_URL,
+mongoose.connect("mongodb+srv://had:azerty@cluster0.siy5ccj.mongodb.net/?retryWrites=true&w=majority",
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
@@ -27,7 +28,7 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
-app.use('/api/sauces', sauceRoutes);
 app.use('/api/auth', userRoutes);
+app.use("/api/posts", postsRoute);
 
 module.exports = app;
