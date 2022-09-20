@@ -10,7 +10,8 @@ exports.signup = (req, res, next) => {
     .then(hash => {
       const user = new User({
         email: req.body.email,
-        password: hash
+        password: hash,
+        username: req.body.username
       });
       user.save()
         .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
@@ -21,27 +22,31 @@ exports.signup = (req, res, next) => {
 
 // Vérification de l'existence de l'utilisateur
 exports.login = (req, res, next) => {
-	User.findOne({ email: req.body.email })
-     	.then(user => {
-         	if (!user) {
-             	return res.status(401).json({ message: 'Paire login/mot de passe incorrecte'});
-         	}
+  User.findOne({ email: req.body.email })
+      .then(user => {
+          if (!user) {
+              return res.status(401).json({ message: 'Paire login/mot de passe incorrecte'});
+          }
           // comparaison du hash du mot de passe existant avec celui rempli dans le formulaire
-         	bcrypt.compare(req.body.password, user.password)
-             	.then(valid => {
-                 	if (!valid) {
-                     	return res.status(401).json({ message: 'Paire login/mot de passe incorrecte' });
-                 	}
-                 	res.status(200).json({
-                     	userId: user._id,
-                     	token: jwt.sign(
-                         	{ userId: user._id },
-                         	process.env.TOKEN,
-                         	{ expiresIn: '24h' }
-                     	)
-                 	});
-             	})
-             	.catch(error => res.status(500).json({ error }));
-     	})
-     	.catch(error => res.status(500).json({ error }));
+          bcrypt.compare(req.body.password, user.password)
+              .then(valid => {
+                  if (!valid) {
+                      return res.status(401).json({ message: 'Paire login/mot de passe incorrecte' });
+                  }
+                  res.status(200).json({
+                      userId: user._id,
+                      token: jwt.sign(
+                          { userId: user._id },
+                          process.env.TOKEN,
+                          { expiresIn: '24h' }
+                      )
+                  });
+              })
+              .catch(error => res.status(500).json({ error }));
+      })
+      .catch(error => res.status(500).json({ error }));
 };
+
+
+
+
