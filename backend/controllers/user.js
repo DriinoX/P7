@@ -4,49 +4,76 @@ const User = require('../models/user');
 require('dotenv').config()
 
 // Création d'un utilisateur
-exports.signup = (req, res, next) => {
-  // cryptage du mot de passe
-  bcrypt.hash(req.body.password, 10)
-    .then(hash => {
-      const user = new User({
-        email: req.body.email,
-        password: hash,
-        username: req.body.username
+exports.signup = async (req, res) => {
+  const { username, email, password } = req.body;
+  //Check if user allready exists
+  const user = await User.findOne({
+    email: email,
+    username: username,
+  });
+  // //If user doesn't exists, hash password and create user in database
+  if (!user) {
+    bcrypt
+      .hash(password, 10)
+      .then((hash) => {
+        User.create({
+          username: username,
+          isAdmin: false,
+          email: email,
+          password: hash,
+        });
+        res.status(201).json("Nouvel utilisateur créé !");
+      })
+      .catch((error) => {
+        res.status(400).json(error);
       });
-      user.save()
-        .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-        .catch(error => res.status(400).json({ error }));
-    })
-    .catch(error => res.status(500).json({ error }));
+  } else if (user) {
+    res.status(409).json("Username ou Email déjà utilisé !");
+  }
 };
 
 // Vérification de l'existence de l'utilisateur
-exports.login = (req, res, next) => {
-  User.findOne({ email: req.body.email })
-      .then(user => {
-          if (!user) {
-              return res.status(401).json({ message: 'Paire login/mot de passe incorrecte'});
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  //Check required informations
+  if (!email || !password) {
+    res.status(400).json("Informations manquantes !");
+  } else {
+    //Check if user allready exists
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(401).json("Informations incorrectes !");
+    } else {
+      //Compare submit password and hashed password
+      bcrypt
+        .compare(password, user.password)
+        .then((valid) => {
+          if (!valid) {
+            return res
+              .status(401)
+              .json("Mauvaise combinaison Email/Mot de passe !");
+          } else {
+            //Create current user infos to send
+            let currentUser = {
+              userId: user._id,
+              username: user.username,
+              admin: user.admin,
+            };
+            //Send current user and create token
+            res.status(200).json({
+              currentUser,
+              token: jwt.sign(
+                { userId: user._id, admin: user.admin },
+                "zadd163325",
+                { expiresIn: "24h" }
+              ),
+            });
           }
-          // comparaison du hash du mot de passe existant avec celui rempli dans le formulaire
-          bcrypt.compare(req.body.password, user.password)
-              .then(valid => {
-                  if (!valid) {
-                      return res.status(401).json({ message: 'Paire login/mot de passe incorrecte' });
-                  }
-                  res.status(200).json({
-                      userId: user._id,
-                      token: jwt.sign(
-                          { userId: user._id },
-                          process.env.TOKEN,
-                          { expiresIn: '24h' }
-                      )
-                  });
-              })
-              .catch(error => res.status(500).json({ error }));
-      })
-      .catch(error => res.status(500).json({ error }));
+        })
+        .catch((error) => {
+          res.status(400).json(error);
+        });
+    }
+  }
 };
-
-
-
-
