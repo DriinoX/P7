@@ -2,13 +2,12 @@ const express = require("express");
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
-require("dotenv").config();
+require('dotenv').config();
 
 const userRoutes = require('./routes/user');
 const postsRoute = require("./routes/posts");
 
 const app = express();
-
 // Connexion au cluster mongoDB
 // mongoose.connect(process.env.MONGODB_URL,
 mongoose.connect("mongodb+srv://had:azerty@cluster0.siy5ccj.mongodb.net/?retryWrites=true&w=majority",
@@ -27,6 +26,7 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
+// Récuperation des images et des routes
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/api/auth', userRoutes);
 app.use("/api/posts", postsRoute);

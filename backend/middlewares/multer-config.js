@@ -7,7 +7,7 @@ const MIME_TYPES = {
   'image/png': 'png'
 };
 
-// Gestion des images
+// Gestion des images (creation d'un object avec l'image du formulaire)
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
     callback(null, 'images');

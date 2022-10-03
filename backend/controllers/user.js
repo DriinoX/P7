@@ -3,22 +3,22 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 require('dotenv').config()
 
-// Création d'un utilisateur
+// CREATION D'UN UTILISATEUR
 exports.signup = async (req, res) => {
   const { username, email, password } = req.body;
-  //Check if user allready exists
   const user = await User.findOne({
     email: email,
     username: username,
   });
-  // //If user doesn't exists, hash password and create user in database
+  // Vérification si l'utilisateur existe pas
   if (!user) {
+    // Si il n'existe pas création d'un utilisateur en hashant le mot de passe
     bcrypt
       .hash(password, 10)
       .then((hash) => {
         User.create({
           username: username,
-          isAdmin: false,
+          admin: false,
           email: email,
           password: hash,
         });
@@ -32,20 +32,19 @@ exports.signup = async (req, res) => {
   }
 };
 
-// Vérification de l'existence de l'utilisateur
+// CONNEXION D'UN UTILISATEUR
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-
-  //Check required informations
+  // Vérifiaction si l'email et le password sont présent
   if (!email || !password) {
     res.status(400).json("Informations manquantes !");
   } else {
-    //Check if user allready exists
     const user = await User.findOne({ email: email });
+    // Vérification si l'utilisateur existe
     if (!user) {
       return res.status(401).json("Informations incorrectes !");
     } else {
-      //Compare submit password and hashed password
+      // Si OUI, comparaison de mot de passe de la requete avec celui enregistré
       bcrypt
         .compare(password, user.password)
         .then((valid) => {
@@ -54,13 +53,12 @@ exports.login = async (req, res) => {
               .status(401)
               .json("Mauvaise combinaison Email/Mot de passe !");
           } else {
-            //Create current user infos to send
             let currentUser = {
               userId: user._id,
               username: user.username,
               admin: user.admin,
             };
-            //Send current user and create token
+            // Envoi de l'utilisateur et création du token d'authentification
             res.status(200).json({
               currentUser,
               token: jwt.sign(
