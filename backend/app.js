@@ -9,8 +9,7 @@ const postsRoute = require("./routes/posts");
 
 const app = express();
 // Connexion au cluster mongoDB
-// mongoose.connect(process.env.MONGODB_URL,
-mongoose.connect("mongodb+srv://had:azerty@cluster0.siy5ccj.mongodb.net/?retryWrites=true&w=majority",
+mongoose.connect(process.env.MONGODB_URL,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
